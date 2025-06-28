@@ -186,6 +186,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Changelog
 
+### v0.2.0
+- **Python Compatibility**: Expanded Python version support from 3.12.4 to >=3.10.0
+- **Broader Compatibility**: Now supports Python 3.10, 3.11, and 3.12+
+- **Improved Accessibility**: Makes the package available to more users with different Python versions
+
 ### v0.1.0
 - Initial release
 - Basic method override functionality
