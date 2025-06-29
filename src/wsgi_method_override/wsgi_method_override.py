@@ -1,7 +1,7 @@
 import logging
 from typing import Callable, Iterable, Optional, Set
-
-from werkzeug.wrappers import Request
+from urllib.parse import parse_qs
+import io
 
 
 class MethodOverrideMiddleware:
@@ -55,12 +55,11 @@ class MethodOverrideMiddleware:
         )
 
     def __call__(self, environ: dict, start_response: Callable) -> Iterable:
-        """Process the WSGI request and apply method override if applicable."""
+        """Processes the WSGI request and applies method override if necessary."""
 
         try:
-            request = Request(environ)
             original_method = environ.get("REQUEST_METHOD", "GET")
-            override_method = self._get_override_method(request)
+            override_method = self._get_override_method(environ)
 
             if override_method and self._is_override_allowed(
                 original_method, override_method
@@ -79,20 +78,54 @@ class MethodOverrideMiddleware:
 
         return self.app(environ, start_response)
 
-    def _get_override_method(self, request: Request) -> Optional[str]:
-        """Extract the override method from request parameters or headers."""
-
-        if self.override_param in request.form:
-            method = request.form.get(self.override_param, "").strip().upper()
-            if method:
-                return method
+    def _get_override_method(self, environ: dict) -> Optional[str]:
+        """Searches for the override method in headers or form data."""
 
         if self.header_override:
-            method = (
-                request.headers.get(self.header_override, "").strip().upper()
-            )
+            headers = self._get_headers(environ)
+            method = headers.get(self.header_override, "").strip().upper()
             if method:
                 return method
+
+        if environ.get("REQUEST_METHOD") == "POST":
+            method = self._get_method_from_form(environ)
+            if method:
+                return method
+
+        return None
+
+    def _get_headers(self, environ: dict) -> dict:
+        """Extract HTTP headers from the WSGI environ."""
+
+        headers = {}
+        for key, value in environ.items():
+            if key.startswith("HTTP_"):
+
+                header_name = key[5:].replace("_", "-")
+                headers[header_name] = value
+        return headers
+
+    def _get_method_from_form(self, environ: dict) -> Optional[str]:
+        """Extracts the override method from the POST form."""
+
+        try:
+
+            input_stream = environ.get("wsgi.input")
+            content_length = int(environ.get("CONTENT_LENGTH", 0))
+
+            if not input_stream or content_length == 0:
+                return None
+
+            form_data = input_stream.read(content_length).decode("utf-8")
+            environ["wsgi.input"] = io.BytesIO(form_data.encode())
+            parsed_data = parse_qs(form_data)
+
+            if self.override_param in parsed_data:
+                method = parsed_data[self.override_param][0].strip().upper()
+                return method if method else None
+
+        except (ValueError, UnicodeDecodeError, IndexError):
+            pass
 
         return None
 
