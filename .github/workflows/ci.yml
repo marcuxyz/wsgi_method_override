@@ -53,7 +53,7 @@ jobs:
     
     - name: Test import
       run: |
-        poetry run python -c "from src.wsgi_method_override import MethodOverrideMiddleware; print('Import successful')"
+        poetry run python -c "from src.method_override import MethodOverrideMiddleware; print('Import successful')"
 
   code-quality:
     name: Code Quality
@@ -84,8 +84,8 @@ jobs:
     
     - name: Run basic linting
       run: |
-        poetry run python -m py_compile src/wsgi_method_override/__init__.py
-        poetry run python -m py_compile src/wsgi_method_override/wsgi_method_override.py
+        poetry run python -m py_compile src/method_override/__init__.py
+        poetry run python -m py_compile src/method_override/wsgi_method_override.py
 
   security:
     name: Security Check
@@ -160,12 +160,12 @@ jobs:
     
     - name: Test installation
       run: |
-        python -c "from wsgi_method_override import MethodOverrideMiddleware; print('Package installed successfully')"
+        python -c "from method_override import MethodOverrideMiddleware; print('Package installed successfully')"
     
     - name: Test basic functionality
       run: |
         python -c "
-        from wsgi_method_override import MethodOverrideMiddleware
+        from method_override import MethodOverrideMiddleware
         
         def dummy_app(environ, start_response):
             return []
@@ -233,7 +233,7 @@ jobs:
       run: |
         poetry run python -c "
         from flask import Flask, request
-        from src.wsgi_method_override import MethodOverrideMiddleware
+        from src.method_override import MethodOverrideMiddleware
         
         app = Flask(__name__)
         app.wsgi_app = MethodOverrideMiddleware(app.wsgi_app)
