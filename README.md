@@ -9,7 +9,7 @@ A Python WSGI middleware that allows HTTP method override via form parameters or
 - 🎯 Configurable allowed methods and parameters
 - 📝 Comprehensive logging for debugging and monitoring
 - 🚀 Compatible with any WSGI application (Flask). Coming soon Django, FastAPI and etc
-- ⚡ Lightweight with minimal dependencies
+- ⚡ Zero dependencies - uses only Python standard library
 
 ## Installation
 
@@ -49,13 +49,11 @@ app.wsgi_app = MethodOverrideMiddleware(app.wsgi_app)
 
 @app.put('/users/<int:user_id>')
 def edit_user(user_id):
-    if request.method == 'PUT':
-        return f"Updating user {user_id}"
+    return f"Updating user {user_id}"
 
-@app.dekete('/users/<int:user_id>')
+@app.delete('/users/<int:user_id>')
 def delete_user(user_id):
-    elif request.method == 'DELETE':
-        return f"Deleting user {user_id}"
+    return f"Deleting user {user_id}"
 ```
 
 ### HTML Form Usage
@@ -127,11 +125,21 @@ This middleware implements several security measures:
 1. The middleware intercepts incoming WSGI requests
 2. Checks if the original request method is POST
 3. Looks for override method in:
-   - Form data (`_method` parameter by default)
-   - HTTP headers (`X-HTTP-Method-Override` by default)
+   - HTTP headers (`X-HTTP-Method-Override` by default) - checked first for performance
+   - Form data (`_method` parameter by default) - only for POST requests
 4. Validates the override method against allowed methods
 5. Updates the `REQUEST_METHOD` in the WSGI environ
 6. Handles body content appropriately for bodyless methods
+
+### Technical Implementation
+
+The middleware uses a clean, zero-dependency approach:
+
+- **Direct WSGI environ manipulation**: No external dependencies required
+- **Stream handling**: Carefully reads and reconstructs the request body stream to avoid conflicts
+- **Header parsing**: Efficiently extracts HTTP headers from WSGI environ variables
+- **Form parsing**: Uses Python's built-in `urllib.parse.parse_qs` for form data processing
+- **Error resilience**: Gracefully handles malformed requests without breaking the application
 
 ## Use Cases
 
@@ -186,6 +194,16 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Changelog
 
+### v0.2.1 (Upcoming)
+- **🚀 Zero Dependencies**: Completely removed Werkzeug dependency - now uses only Python standard library
+- **🧹 Code Simplification**: Major refactor for better readability and maintainability
+- **🐛 Bug Fix**: Resolved browser hanging issue when accessing `request.form` in WSGI applications
+- **⚡ Performance**: Faster form parsing with direct stream handling
+- **📖 Better Documentation**: Improved code comments and documentation in Portuguese for better understanding
+- **🔧 Improved Error Handling**: More robust error handling with graceful fallbacks
+- **🎯 Cleaner API**: Simplified internal methods with clear, descriptive names
+- **💡 Better Debugging**: Enhanced logging for troubleshooting middleware issues
+
 ### v0.2.0
 - **Python Compatibility**: Expanded Python version support from 3.12.4 to >=3.10.0
 - **Broader Compatibility**: Now supports Python 3.10, 3.11, and 3.12+
@@ -213,5 +231,5 @@ If you encounter any issues or have questions, please:
 ## Acknowledgments
 
 - Inspired by similar middleware implementations in other web frameworks
-- Built with [Werkzeug](https://werkzeug.palletsprojects.com/) for request handling
+- Built with Python standard library for maximum compatibility
 - Follows WSGI standards and best practices

@@ -1,6 +1,6 @@
 [project]
 name = "wsgi-method-override"
-version = "0.2.0"
+version = "0.2.1"
 description = "A tool for turning a web Python application. Provide an HTTP method override."
 authors = [
     {name = "Marcus Almeida", email = "mpereirassa@gmail.com"}
@@ -14,7 +14,6 @@ repository = "https://github.com/marcuxyz/wsgi-method-override"
 homepage = "https://github.com/marcuxyz/wsgi-method-override/issues"
 
 dependencies = [
-    "werkzeug (>=3.1.3,<4.0.0)"
 ]
 
 [tool.poetry]

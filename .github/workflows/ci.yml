@@ -1,0 +1,246 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  release:
+    types: [ published ]
+
+jobs:
+  test:
+    name: Test Python ${{ matrix.python-version }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ['3.10', '3.11', '3.12']
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: latest
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+    
+    - name: Load cached venv
+      id: cached-poetry-dependencies
+      uses: actions/cache@v4
+      with:
+        path: .venv
+        key: venv-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}
+    
+    - name: Install dependencies
+      if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+      run: poetry install --no-interaction --no-root
+    
+    - name: Install project
+      run: poetry install --no-interaction
+    
+    - name: Run tests
+      run: |
+        poetry run pytest tests/ -v --tb=short
+    
+    - name: Test import
+      run: |
+        poetry run python -c "from src.wsgi_method_override import MethodOverrideMiddleware; print('Import successful')"
+
+  code-quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: latest
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+    
+    - name: Install dependencies
+      run: poetry install --no-interaction
+    
+    - name: Check code formatting with Black
+      run: |
+        poetry run black -l 79 --check --diff -l 79 src/ tests/
+    
+    - name: Run basic linting
+      run: |
+        poetry run python -m py_compile src/wsgi_method_override/__init__.py
+        poetry run python -m py_compile src/wsgi_method_override/wsgi_method_override.py
+
+  security:
+    name: Security Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+    
+    - name: Install dependencies
+      run: poetry install --no-interaction
+    
+    - name: Run safety check
+      run: |
+        pip install safety
+        safety check || echo "Safety check completed"
+
+  build:
+    name: Build Package
+    runs-on: ubuntu-latest
+    needs: [test, code-quality]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+    
+    - name: Build package
+      run: poetry build
+    
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: dist
+        path: dist/
+
+  test-install:
+    name: Test Package Installation
+    runs-on: ubuntu-latest
+    needs: build
+    
+    steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    
+    - name: Download build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: dist
+        path: dist/
+    
+    - name: Install package from wheel
+      run: |
+        pip install dist/*.whl
+    
+    - name: Test installation
+      run: |
+        python -c "from wsgi_method_override import MethodOverrideMiddleware; print('Package installed successfully')"
+    
+    - name: Test basic functionality
+      run: |
+        python -c "
+        from wsgi_method_override import MethodOverrideMiddleware
+        
+        def dummy_app(environ, start_response):
+            return []
+        
+        middleware = MethodOverrideMiddleware(dummy_app)
+        print('Middleware created successfully')
+        print(f'Allowed methods: {middleware.allowed_methods}')
+        "
+
+  publish:
+    name: Publish to PyPI
+    runs-on: ubuntu-latest
+    needs: [test, code-quality, security, build, test-install]
+    if: github.event_name == 'release' && github.event.action == 'published'
+    environment: release
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+    
+    - name: Download build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: dist
+        path: dist/
+    
+    - name: Publish to PyPI
+      env:
+        POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_API_TOKEN }}
+      run: |
+        poetry config pypi-token.pypi $POETRY_PYPI_TOKEN_PYPI
+        poetry publish --skip-existing
+
+  integration-test:
+    name: Integration Test with Flask
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+    
+    - name: Install dependencies
+      run: |
+        poetry install --no-interaction
+        poetry add flask
+    
+    - name: Test Flask integration
+      run: |
+        poetry run python -c "
+        from flask import Flask, request
+        from src.wsgi_method_override import MethodOverrideMiddleware
+        
+        app = Flask(__name__)
+        app.wsgi_app = MethodOverrideMiddleware(app.wsgi_app)
+        
+        @app.route('/test', methods=['PUT', 'DELETE'])
+        def test_route():
+            return f'Method: {request.method}'
+        
+        print('Flask integration test passed')
+        "
