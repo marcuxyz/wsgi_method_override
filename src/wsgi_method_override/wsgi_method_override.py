@@ -100,7 +100,6 @@ class MethodOverrideMiddleware:
         headers = {}
         for key, value in environ.items():
             if key.startswith("HTTP_"):
-
                 header_name = key[5:].replace("_", "-")
                 headers[header_name] = value
         return headers
@@ -109,7 +108,6 @@ class MethodOverrideMiddleware:
         """Extracts the override method from the POST form."""
 
         try:
-
             input_stream = environ.get("wsgi.input")
             content_length = int(environ.get("CONTENT_LENGTH", 0))
 
@@ -123,7 +121,6 @@ class MethodOverrideMiddleware:
             if self.override_param in parsed_data:
                 method = parsed_data[self.override_param][0].strip().upper()
                 return method if method else None
-
         except (ValueError, UnicodeDecodeError, IndexError):
             pass
 
