@@ -6,7 +6,7 @@ and the Flask application routes.
 """
 
 import io
-from src.wsgi_method_override.wsgi_method_override import (
+from src.method_override.wsgi_method_override import (
     MethodOverrideMiddleware,
 )
 

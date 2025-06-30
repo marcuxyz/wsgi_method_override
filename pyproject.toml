@@ -1,23 +1,23 @@
 [project]
-name = "wsgi-method-override"
-version = "0.2.1"
-description = "A tool for turning a web Python application. Provide an HTTP method override."
+name = "method-override"
+version = "0.3.0"
+description = "A Python WSGI middleware for HTTP method override functionality"
 authors = [
     {name = "Marcus Almeida", email = "mpereirassa@gmail.com"}
 ]
 readme = "README.md"
 license = "MIT"
-keywords = ["wsgi", "web server", "method override"]
+keywords = ["wsgi", "web server", "method override", "http", "middleware"]
 requires-python = ">=3.10.0"
 
-repository = "https://github.com/marcuxyz/wsgi-method-override"
-homepage = "https://github.com/marcuxyz/wsgi-method-override/issues"
+repository = "https://github.com/marcuxyz/method-override"
+homepage = "https://github.com/marcuxyz/method-override"
 
 dependencies = [
 ]
 
 [tool.poetry]
-packages = [{include = "wsgi_method_override", from = "src"}]
+packages = [{include = "method_override", from = "src"}]
 
 
 [tool.poetry.group.dev.dependencies]

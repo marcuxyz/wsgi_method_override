@@ -1,4 +1,4 @@
-# WSGI Method Override
+# Method Override Middleware
 
 A Python WSGI middleware that allows HTTP method override via form parameters or headers. This enables HTML forms to use HTTP methods other than GET and POST by providing a method override mechanism.
 
@@ -16,13 +16,13 @@ A Python WSGI middleware that allows HTTP method override via form parameters or
 Install using pip:
 
 ```bash
-pip install wsgi-method-override
+pip install method-override
 ```
 
 Or using Poetry:
 
 ```bash
-poetry add wsgi-method-override
+poetry add method-override
 ```
 
 ## Quick Start
@@ -30,7 +30,7 @@ poetry add wsgi-method-override
 ### Basic Usage
 
 ```python
-from wsgi_method_override import MethodOverrideMiddleware
+from method_override import MethodOverrideMiddleware
 
 # Wrap your WSGI application
 app = MethodOverrideMiddleware(your_wsgi_app)
@@ -40,7 +40,7 @@ app = MethodOverrideMiddleware(your_wsgi_app)
 
 ```python
 from flask import Flask
-from wsgi_method_override import MethodOverrideMiddleware
+from method_override import MethodOverrideMiddleware
 
 app = Flask(__name__)
 
@@ -91,7 +91,7 @@ fetch('/users/123', {
 ### Advanced Configuration
 
 ```python
-from wsgi_method_override import MethodOverrideMiddleware
+from method_override import MethodOverrideMiddleware
 
 app = MethodOverrideMiddleware(
     your_wsgi_app,
@@ -154,8 +154,8 @@ The middleware uses a clean, zero-dependency approach:
 
 ```bash
 # Clone the repository
-git clone https://github.com/marcuxyz/wsgi-method-override.git
-cd wsgi-method-override
+git clone https://github.com/marcuxyz/method-override.git
+cd method-override
 
 # Install dependencies
 poetry install
@@ -194,7 +194,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Changelog
 
-### v0.2.1 (Upcoming)
+### v0.3.0
+- **📦 Better Package Name**: Renamed from `wsgi-method-override` to `method-override` for better discoverability
+
+### v0.2.1
 - **🚀 Zero Dependencies**: Completely removed Werkzeug dependency - now uses only Python standard library
 - **🧹 Code Simplification**: Major refactor for better readability and maintainability
 - **🐛 Bug Fix**: Resolved browser hanging issue when accessing `request.form` in WSGI applications
@@ -220,8 +223,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 If you encounter any issues or have questions, please:
 
-1. Check the [documentation](https://github.com/marcuxyz/wsgi-method-override)
-2. Search existing [issues](https://github.com/marcuxyz/wsgi-method-override/issues)
+1. Check the [documentation](https://github.com/marcuxyz/method-override)
+2. Search existing [issues](https://github.com/marcuxyz/method-override/issues)
 3. Create a new issue if needed
 
 ## Authors
