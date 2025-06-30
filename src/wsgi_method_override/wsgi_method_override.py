@@ -1,7 +1,8 @@
 import logging
+import io
+
 from typing import Callable, Iterable, Optional, Set
 from urllib.parse import parse_qs
-import io
 
 
 class MethodOverrideMiddleware:

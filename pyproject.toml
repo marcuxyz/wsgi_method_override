@@ -14,7 +14,6 @@ repository = "https://github.com/marcuxyz/wsgi-method-override"
 homepage = "https://github.com/marcuxyz/wsgi-method-override/issues"
 
 dependencies = [
-    "werkzeug (>=3.1.3,<4.0.0)"
 ]
 
 [tool.poetry]
